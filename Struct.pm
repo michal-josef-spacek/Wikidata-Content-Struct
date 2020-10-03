@@ -5,6 +5,7 @@ use warnings;
 
 use Class::Utils qw(set_params);
 use Error::Pure qw(err);
+use Wikidata::Content;
 use Wikidata::Datatype::Struct::Sitelink;
 use Wikidata::Datatype::Struct::Statement;
 
@@ -35,11 +36,13 @@ sub parse {
 	# Claims.
 	foreach my $claim_property (keys %{$struct_hr->{'claims'}}) {
 		foreach my $claim_hr (@{$struct_hr->{'claims'}->{$claim_property}}) {
-			# TODO Remove $self
-			push @{$self->{'claims'}},
-				Wikidata::Datatype::Struct::Statement::struct2obj(
-					$claim_hr, $self->{'entity'},
-				);
+			$content->add_claim(
+				$claim_hr->{'mainsnak'}->{'datatype'},
+				# TODO Specific properties.
+				{
+					$claim_property => $claim_hr->{'mainsnak'}->{'datavalue'}->{'value'},
+				},
+			);
 		}
 	}
 
@@ -74,7 +77,7 @@ sub parse {
 		});
 	}
 
-	return;
+	return $content;
 }
 
 sub serialize {
